@@ -106,8 +106,8 @@ def load_crew_left(file, sheet_name):
 
 def load_crew_right(file):
     try:
-        # L열(Rank)을 가져오기 위해 usecols 범위 확장 (D:E, L:L, O:R)
-        df = pd.read_excel(file, header=2, usecols="D:E,L:L,O:P,Q:R", engine='openpyxl')
+        # M열(Rank)을 가져오기 위해 usecols 범위를 M:M으로 수정 (D:E, M:M, O:R)
+        df = pd.read_excel(file, header=2, usecols="D:E,M:M,O:P,Q:R", engine='openpyxl')
         df.columns = ["CrewID", "CrewName", "Rank", "Arr Flt", "Arr Time", "Dep Flt", "Dep Time"]
         df["CrewID"] = df["CrewID"].apply(normalize_id)
         df["MatchName"] = df["CrewName"].apply(normalize_name)
@@ -202,7 +202,6 @@ if df_l is not None and df_r is not None:
         if not moved_crew.empty:
             move_groups = moved_crew.groupby(['Arr Flt_old', 'Arr Flt_new'])
             for (old_f, new_f), group in move_groups:
-                # 변경된 인원 이름 옆에 (사번/직책) 추가
                 names_html = " ".join([f"<span class='badge' style='background-color:#4c6ef5; display:inline-block; margin-bottom:5px;'>{n}({i}/{r})</span>" for n, i, r in zip(group['CrewName_new'], group['CrewID'], group['Rank_new'])])
                 st.markdown(f"<div class='move-group-card'><div class='move-title'>🚚 편수 이동: {old_f} ➔ {new_f}</div>{names_html}</div>", unsafe_allow_html=True)
 
@@ -228,14 +227,12 @@ if df_l is not None and df_r is not None:
             match_cnt = min(len(rem_list), len(add_list))
             for _ in range(match_cnt):
                 r, a = rem_list.pop(0), add_list.pop(0)
-                # 교체 시 After 인원의 이름(사번/직책) 표시
                 items_html.append(f"<div class='item-container bg-swap'><span class='badge badge-swap'>교체</span> {r['CrewName']} ➔ <b>{a['CrewName']}({a['CrewID']}/{a['Rank']})</b></div>")
 
             for r in rem_list:
                 items_html.append(f"<div class='item-container bg-out'><span class='badge badge-out'>CXL</span> {r['CrewName']}</div>")
             
             for a in add_list:
-                # 신규 진입 인원의 이름(사번/직책) 표시
                 items_html.append(f"<div class='item-container bg-in'><span class='badge badge-in'>IN</span> <b>{a['CrewName']}({a['CrewID']}/{a['Rank']})</b></div>")
 
             for sid in stay_ids:
@@ -257,12 +254,11 @@ if df_l is not None and df_r is not None:
                     sub.append(f"출발: {d_f_old} {d_t_old} ➔ <b>{d_f_new} {d_t_new}</b>")
 
                 if sub:
-                    # 정보 변경 인원의 이름(사번/직책) 표시
                     items_html.append(f"<div class='item-container bg-info'><span class='badge badge-info'>변경</span> <b>{n_r['CrewName']}({n_r['CrewID']}/{n_r['Rank']})</b>: {' / '.join(sub)}</div>")
 
             if items_html:
                 st.markdown(f"<div class='group-card'><div class='flight-title'>✈️ {flt}</div>{''.join(items_html)}</div>", unsafe_allow_html=True)
 
-    st.success("✅ 업데이트 완료: 사번 및 이름 보정 로직과 통합 리포트 내 직책 정보가 추가되었습니다.")
+    st.success("✅ 업데이트 완료: 직책(Rank) 정보를 M열에서 가져오도록 보정되었습니다.")
 else:
     st.info("💡 파일을 업로드하여 분석을 시작하세요.")
